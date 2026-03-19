@@ -2,7 +2,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production && npm ci
+#RUN npm ci --only=production && npm ci
+RUN npm install --legacy-peer-deps
 
 # ── Stage 2: build ────────────────────────────────────────────
 FROM node:20-alpine AS builder
