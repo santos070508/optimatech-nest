@@ -1,0 +1,59 @@
+version: "3.9"
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: optimatech_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       optimatech_db
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: optima2025
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migration.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U postgres -d optimatech_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: optimatech_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST:     db
+      DB_PORT:     5432
+      DB_NAME:     optimatech_db
+      DB_USER:     postgres
+      DB_PASSWORD: optima2025
+      PORT:        3000
+      NODE_ENV:    production
+      DB_SYNC:     false
+      SWAGGER_ENABLED: "true"
+      ALLOWED_ORIGINS: "*"
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+
+  web:
+    image: nginx:alpine
+    container_name: optimatech_web
+    restart: unless-stopped
+    depends_on: [api]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
+  uploads:
