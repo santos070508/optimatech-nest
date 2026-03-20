@@ -1,6 +1,6 @@
 import { Module }         from '@nestjs/common';
 import { TypeOrmModule }  from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule }   from '@nestjs/config';
 import { CategoryOrmEntity } from '../../../modules/categories/infrastructure/persistence/category.orm-entity';
 import { ProductOrmEntity }  from '../../../modules/products/infrastructure/persistence/product.orm-entity';
 import { OrderOrmEntity }    from '../../../modules/orders/infrastructure/persistence/order.orm-entity';
@@ -9,33 +9,37 @@ import { OrderOrmEntity }    from '../../../modules/orders/infrastructure/persis
   imports: [
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject:  [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const isProd      = config.get('app.env') === 'production';
+      useFactory: () => {
+        const isProd      = process.env.NODE_ENV === 'production';
         const databaseUrl = process.env.DATABASE_URL;
 
-        // Railway inyecta DATABASE_URL automáticamente con el plugin PostgreSQL.
-        // Si está presente, lo usamos directamente; si no, usamos variables individuales.
-        const baseConfig = {
+        const base = {
           type:          'postgres' as const,
           entities:      [CategoryOrmEntity, ProductOrmEntity, OrderOrmEntity],
-          synchronize:   config.get<boolean>('app.db.sync', false),
-          logging:       config.get<boolean>('app.db.logging', false),
+          synchronize:   process.env.DB_SYNC === 'true',
+          logging:       process.env.DB_LOGGING === 'true',
           migrationsRun: false,
+          // SSL requerido en Railway (PostgreSQL en la nube)
           ssl: isProd ? { rejectUnauthorized: false } : false,
+          // Reintentar conexión si la BD aún no está lista
+          retryAttempts:  10,
+          retryDelay:     3000,
+          connectTimeoutMS: 10000,
         };
 
         if (databaseUrl) {
-          return { ...baseConfig, url: databaseUrl };
+          console.log('🐘 Usando DATABASE_URL (Railway)');
+          return { ...base, url: databaseUrl };
         }
 
+        console.log('🐘 Usando variables individuales DB_*');
         return {
-          ...baseConfig,
-          host:     config.get<string>('app.db.host'),
-          port:     config.get<number>('app.db.port'),
-          database: config.get<string>('app.db.name'),
-          username: config.get<string>('app.db.user'),
-          password: config.get<string>('app.db.password'),
+          ...base,
+          host:     process.env.DB_HOST     ?? 'localhost',
+          port:     parseInt(process.env.DB_PORT ?? '5432', 10),
+          database: process.env.DB_NAME     ?? 'optimatech_db',
+          username: process.env.DB_USER     ?? 'postgres',
+          password: process.env.DB_PASSWORD ?? '',
         };
       },
     }),

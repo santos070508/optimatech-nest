@@ -4,18 +4,15 @@ import { FileStoragePort, FILE_STORAGE } from '../../domain/file-storage.port';
 @Injectable()
 export class UploadFilesUseCase {
   constructor(
-    @Inject(FILE_STORAGE)
-    private readonly storage: FileStoragePort,
+    @Inject(FILE_STORAGE) private readonly storage: FileStoragePort,
   ) {}
 
-  async executeMultipart(files: Express.Multer.File[]): Promise<string[]> {
+  executeMultipart(files: Express.Multer.File[]): Promise<string[]> {
     return Promise.all(files.map(f => this.storage.save(f)));
   }
 
   async executeBase64(images: string[]): Promise<string[]> {
-    const results = await Promise.all(
-      images.slice(0, 5).map(b64 => this.storage.saveBase64(b64)),
-    );
+    const results = await Promise.all(images.slice(0, 5).map(b => this.storage.saveBase64(b)));
     return results.filter(Boolean);
   }
 }
