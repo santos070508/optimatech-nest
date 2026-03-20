@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { FileStoragePort, FILE_STORAGE } from '../domain/file-storage.port';
+import { FileStoragePort, FILE_STORAGE } from '../../domain/file-storage.port';
 
 @Injectable()
 export class UploadFilesUseCase {
@@ -9,14 +9,13 @@ export class UploadFilesUseCase {
   ) {}
 
   async executeMultipart(files: Express.Multer.File[]): Promise<string[]> {
-    const urls = await Promise.all(files.map(f => this.storage.save(f)));
-    return urls;
+    return Promise.all(files.map(f => this.storage.save(f)));
   }
 
   async executeBase64(images: string[]): Promise<string[]> {
-    const urls = await Promise.all(
+    const results = await Promise.all(
       images.slice(0, 5).map(b64 => this.storage.saveBase64(b64)),
     );
-    return urls.filter(Boolean);
+    return results.filter(Boolean);
   }
 }

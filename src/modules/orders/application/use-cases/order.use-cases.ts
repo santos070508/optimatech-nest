@@ -55,11 +55,11 @@ export class CreateOrderUseCase {
       dto.customer.notes ?? '',
     );
 
-    const items = dto.items.map(i =>
-      new OrderItem(i.productId, i.name, i.price, i.qty),
+    const items = dto.items.map(
+      i => new OrderItem(i.productId, i.name, i.price, i.qty),
     );
 
-    const total  = items.reduce((sum, i) => sum + i.subtotal, 0);
+    const total = items.reduce((sum, i) => sum + i.subtotal, 0);
 
     return this.repo.save({
       customer,

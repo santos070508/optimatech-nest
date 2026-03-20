@@ -2,7 +2,7 @@ import { Injectable }    from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs           from 'fs';
 import * as path         from 'path';
-import { FileStoragePort } from '../../domain/file-storage.port';
+import { FileStoragePort } from '../domain/file-storage.port';
 
 @Injectable()
 export class LocalDiskStorage implements FileStoragePort {

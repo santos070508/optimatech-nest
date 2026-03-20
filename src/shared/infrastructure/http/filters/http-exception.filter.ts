@@ -3,18 +3,16 @@ import {
   HttpException, HttpStatus, Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { DomainException }    from '../../../domain/exceptions/domain.exception';
 import {
   NotFoundException,
   ValidationException,
   ConflictException,
-  DomainException,
-} from '../../domain/exceptions/domain.exception';
-import { NotFoundException   as DomainNFE }  from '../../domain/exceptions/index';
+} from '../../../domain/exceptions/index';
 
 /**
  * Convierte excepciones del dominio y de NestJS en respuestas HTTP consistentes.
- * Todas las respuestas de error siguen el mismo contrato:
- * { ok: false, statusCode, message, timestamp, path }
+ * Contrato: { ok: false, statusCode, message, timestamp, path }
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -41,27 +39,27 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private resolveException(exception: unknown): { status: number; message: string } {
-    // Excepciones de NestJS (HttpException)
+    // Excepciones de NestJS
     if (exception instanceof HttpException) {
-      const res  = exception.getResponse();
-      const msg  = typeof res === 'string'
+      const res = exception.getResponse();
+      const msg = typeof res === 'string'
         ? res
         : (res as Record<string, unknown>).message as string;
       return { status: exception.getStatus(), message: msg };
     }
 
     // Excepciones del dominio → mapeadas a HTTP
-    if (exception instanceof DomainNFE) {
-      return { status: HttpStatus.NOT_FOUND, message: exception.message };
+    if (exception instanceof NotFoundException) {
+      return { status: HttpStatus.NOT_FOUND, message: (exception as Error).message };
     }
     if (exception instanceof ValidationException) {
-      return { status: HttpStatus.BAD_REQUEST, message: exception.message };
+      return { status: HttpStatus.BAD_REQUEST, message: (exception as Error).message };
     }
     if (exception instanceof ConflictException) {
-      return { status: HttpStatus.CONFLICT, message: exception.message };
+      return { status: HttpStatus.CONFLICT, message: (exception as Error).message };
     }
     if (exception instanceof DomainException) {
-      return { status: HttpStatus.UNPROCESSABLE_ENTITY, message: exception.message };
+      return { status: HttpStatus.UNPROCESSABLE_ENTITY, message: (exception as Error).message };
     }
 
     // Error inesperado
