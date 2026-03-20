@@ -6,44 +6,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class OrderItemDto {
-  @ApiProperty({ example: 'p1abc' })
-  @IsString()
-  @IsNotEmpty()
-  productId: string;
-
-  @ApiProperty({ example: 'Logitech MX Master 3S' })
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @ApiProperty({ example: 89.99 })
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @IsPositive()
-  @Type(() => Number)
-  price: number;
-
-  @ApiProperty({ example: 2 })
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  qty: number;
-}
-
-export class CreateOrderDto {
-  @ApiProperty({ description: 'Información del cliente' })
-  @ValidateNested()
-  @Type(() => CustomerDto)
-  customer: CustomerDto;
-
-  @ApiProperty({ type: [OrderItemDto] })
-  @IsArray()
-  @ArrayMinSize(1, { message: 'El pedido debe tener al menos un producto' })
-  @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items: OrderItemDto[];
-}
-
+// CustomerDto declarada PRIMERO — evita ReferenceError en runtime
 export class CustomerDto {
   @ApiProperty({ example: 'Juan Pérez' })
   @IsString()
@@ -69,4 +32,43 @@ export class CustomerDto {
   @IsOptional()
   @IsString()
   notes?: string;
+}
+
+export class OrderItemDto {
+  @ApiProperty({ example: 'p1abc' })
+  @IsString()
+  @IsNotEmpty()
+  productId: string;
+
+  @ApiProperty({ example: 'Logitech MX Master 3S' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({ example: 89.99 })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsPositive()
+  @Type(() => Number)
+  price: number;
+
+  @ApiProperty({ example: 2 })
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  qty: number;
+}
+
+// CreateOrderDto declarada DESPUÉS de sus dependencias
+export class CreateOrderDto {
+  @ApiProperty({ description: 'Información del cliente', type: CustomerDto })
+  @ValidateNested()
+  @Type(() => CustomerDto)
+  customer: CustomerDto;
+
+  @ApiProperty({ type: [OrderItemDto] })
+  @IsArray()
+  @ArrayMinSize(1, { message: 'El pedido debe tener al menos un producto' })
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items: OrderItemDto[];
 }

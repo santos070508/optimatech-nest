@@ -12,7 +12,7 @@ export class LocalDiskStorage implements FileStoragePort {
     if (!fs.existsSync(this.uploadDir)) fs.mkdirSync(this.uploadDir, { recursive: true });
   }
   async save(file: Express.Multer.File): Promise<string> {
-    const ext = path.extname(file.originalname).toLowerCase();
+    const ext  = path.extname(file.originalname).toLowerCase();
     const name = `img_${Date.now()}_${Math.random().toString(36).slice(2,6)}${ext}`;
     fs.writeFileSync(path.join(this.uploadDir, name), file.buffer);
     return `/uploads/${name}`;
@@ -22,7 +22,7 @@ export class LocalDiskStorage implements FileStoragePort {
     if (!m) return '';
     const ext  = m[1].split('/')[1].replace('jpeg','jpg');
     const name = `img_${Date.now()}_${Math.random().toString(36).slice(2,6)}.${ext}`;
-    fs.writeFileSync(path.join(this.uploadDir, name), Buffer.from(m[2], 'base64'));
+    fs.writeFileSync(path.join(this.uploadDir, name), Buffer.from(m[2],'base64'));
     return `/uploads/${name}`;
   }
 }

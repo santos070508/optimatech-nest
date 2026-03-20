@@ -12,11 +12,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+    const req = ctx.getRequest<Request>();
     const { status, message } = this.resolve(exception);
-    this.logger.error(`${ctx.getRequest<Request>().method} ${ctx.getRequest<Request>().url} → ${status}`);
+    this.logger.error(`${req.method} ${req.url} → ${status}: ${message}`);
     ctx.getResponse<Response>().status(status).json({
       ok: false, statusCode: status, message,
-      timestamp: new Date().toISOString(), path: ctx.getRequest<Request>().url,
+      timestamp: new Date().toISOString(), path: req.url,
     });
   }
 
@@ -25,10 +26,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const r = e.getResponse();
       return { status: e.getStatus(), message: typeof r === 'string' ? r : (r as any).message };
     }
-    if (e instanceof NotFoundException)    return { status: HttpStatus.NOT_FOUND,            message: (e as Error).message };
-    if (e instanceof ValidationException)  return { status: HttpStatus.BAD_REQUEST,          message: (e as Error).message };
-    if (e instanceof ConflictException)    return { status: HttpStatus.CONFLICT,             message: (e as Error).message };
-    if (e instanceof DomainException)      return { status: HttpStatus.UNPROCESSABLE_ENTITY, message: (e as Error).message };
+    if (e instanceof NotFoundException)   return { status: HttpStatus.NOT_FOUND,            message: (e as Error).message };
+    if (e instanceof ValidationException) return { status: HttpStatus.BAD_REQUEST,          message: (e as Error).message };
+    if (e instanceof ConflictException)   return { status: HttpStatus.CONFLICT,             message: (e as Error).message };
+    if (e instanceof DomainException)     return { status: HttpStatus.UNPROCESSABLE_ENTITY, message: (e as Error).message };
     return { status: HttpStatus.INTERNAL_SERVER_ERROR, message: e instanceof Error ? e.message : 'Error interno' };
   }
 }
