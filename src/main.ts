@@ -1,13 +1,13 @@
-import { NestFactory }          from '@nestjs/core';
-import { ValidationPipe }       from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ConfigService }        from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as path                  from 'path';
-import * as fs                    from 'fs';
-import { AppModule }            from './app.module';
-import { HttpExceptionFilter }  from './shared/infrastructure/http/filters/http-exception.filter';
-import { ResponseInterceptor }  from './shared/infrastructure/http/interceptors/response.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as fs from 'fs';
+import * as path from 'path';
+import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './shared/infrastructure/http/filters/http-exception.filter';
+import { ResponseInterceptor } from './shared/infrastructure/http/interceptors/response.interceptor';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -69,7 +69,7 @@ async function bootstrap(): Promise<void> {
     console.log(`📖  Swagger: http://localhost:${port}/${swaggerPath}`);
   }
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀  OptimaTech-Smart API → http://localhost:${port}/api`);
   console.log(`🌿  Entorno: ${env}`);
 }
